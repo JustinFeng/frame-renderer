@@ -1,101 +1,93 @@
-import Image from "next/image";
+'use client';
+import { useFarcasterIdentity } from '@frames.js/render/identity/farcaster';
+import { useFrame } from '@frames.js/render/use-frame';
+import { fallbackFrameContext } from '@frames.js/render';
+import {
+  FrameUI,
+  type FrameUIComponents,
+  type FrameUITheme,
+} from '@frames.js/render/ui';
+import { WebStorage } from '@frames.js/render/identity/storage';
+import {useEffect} from 'react';
 
-export default function Home() {
+/**
+ * StylingProps is a type that defines the props that can be passed to the components to style them.
+ */
+type StylingProps = {
+  className?: string;
+  style?: React.CSSProperties;
+};
+
+/**
+ * You can override components to change their internal logic or structure if you want.
+ * By default it is not necessary to do that since the default structure is already there
+ * so you can just pass an empty object and use theme to style the components.
+ *
+ * You can also style components here and completely ignore theme if you wish.
+ */
+const components: FrameUIComponents<StylingProps> = {};
+
+/**
+ * By default there are no styles so it is up to you to style the components as you wish.
+ */
+const theme: FrameUITheme<StylingProps> = {
+  Root: {
+    className:
+      'flex flex-col max-w-[600px] gap-2 border rounded-lg ovrflow-hidden bg-white relative',
+  },
+  LoadingScreen: {
+    className: 'absolute top-0 left-0 right-0 bottom-0 bg-gray-300 z-10',
+  },
+  ImageContainer: {
+    className: 'relative w-full border-b border-gray-300 overflow-hidden',
+    style: {
+      aspectRatio: 'var(--frame-image-aspect-ratio)', // helps to set the fixed loading skeleton size
+    },
+  },
+  ButtonsContainer: {
+    className: 'flex justify-evenly',
+  },
+  Button: {
+    className: 'text-gray-900 grow border-r-2 last:border-r-0',
+  },
+};
+
+export default function App() {
+  const signerState = useFarcasterIdentity({
+    onMissingIdentity: () => {
+      // @todo implement a sign in dialog or anything you want that will then call signerState.createSigner()
+      console.log('Create a signer');
+      signerState.createSigner();
+    },
+
+    // WebStorage is default value for storage option. It uses local storage by default.
+    // You can implement your own storage that implements the Storage interface from @frames.js/render/identity/types.
+    storage: new WebStorage(),
+
+    // visibilityChangeDetectionHook is used to detect whether the current UI is visible to the user. For example if the user changed to another tab.
+    // It affects how polling for the identity is done. By default it uses the Page Visibility API.
+    // The hook must satisfy VisibilityDetectionHook type from @frames.js/render/identity/types.
+    // visibilityChangeDetectionHook: ...
+  });
+
+  const frameState = useFrame({
+    // replace with frame URL
+    homeframeUrl:
+      'https://farcaster-tokenscript-frame.vercel.app/api/view/137/0xd5ca946ac1c1f24eb26dae9e1a53ba6a02bd97fe?tokenId=1997912245',
+    // corresponds to the name of the route for POST and GET in step 2
+    frameActionProxy: '/frames',
+    frameGetProxy: '/frames',
+    connectedAddress: undefined,
+    frameContext: fallbackFrameContext,
+    // map to your identity if you have one
+    signerState,
+  });
+
+  useEffect(() => {
+    signerState.createSigner();
+  }, [])
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+    <FrameUI frameState={frameState} components={components} theme={theme} />
   );
 }
